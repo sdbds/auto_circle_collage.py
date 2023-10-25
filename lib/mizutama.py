@@ -127,18 +127,32 @@ class Mizutama:
         blur = cv2.blur(cv2.inpaint(self.img, 255 - mask, 10, cv2.INPAINT_TELEA), (50, 50))
         img2 = cv2.bitwise_and(blur, blur, mask = 255 - mask)
 
-        return cv2.add(img1, img2)    
+        return cv2.add(img1, img2)
 
-if __name__ == '__main__':  
-# loop through all the images in the folder
-    for img_path in glob_images(folder_path,"*"):
-        # read the image
-        img = cv2.imread(img_path)
-        # create a Mizutama object
-        mztm = Mizutama(img)
-        # collage the image
-        result = mztm.collage()
-        # save the result image with a new name
-        image_name = os.path.basename(img_path)
 
-        cv2.imwrite(os.path.join(save_path,image_name), result)
+def process_images():
+    """处理文件夹中的所有图片并保存结果"""
+
+    FOLDER_PATH = "test"
+    SAVE_PATH = "test2"
+    IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".PNG", ".JPG", ".JPEG", ".WEBP", ".BMP"]
+
+    # 循环遍历文件夹中的所有图片
+    for ext in IMAGE_EXTENSIONS:
+        for img_path in glob.glob(os.path.join(FOLDER_PATH, "*" + ext)):
+            # 读取图片
+            img = cv2.imread(img_path)
+
+            # 创建一个Mizutama对象
+            mztm = Mizutama(img)
+
+            # collage图片
+            result = mztm.collage()
+
+            # 以新名称保存结果图片
+            image_name = os.path.basename(img_path)
+            cv2.imwrite(os.path.join(SAVE_PATH, image_name), result)
+
+
+if __name__ == '__main__':
+    process_images()

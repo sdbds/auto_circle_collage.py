@@ -1,35 +1,143 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>全自動水玉コラ生成マシーン Web版</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
-    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='js/main.js') }}"></script>
-  </head>
-  <body style="padding-top: 70px;">
-    <nav class="navbar navbar-default navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-          <a class="navbar-brand" href="/">全自動水玉コラ生成マシーン (？)</a>
-        </div>
-      </div>
-    </nav>
-    <div class="container">
-      <div class="row">
-        <div class="col-xs-8 col-sm-9 col-md-8 col-lg-6">
-          <div class="text-center">
-            <canvas id="canvas" width="512" height="512" style="border: 1px lightgray solid;"></canvas>
-          </div>
-          <form id="url" class="well">
-            <div class="form-group">
-              <input type="url" name="image_url" class="form-control" style="" placeholder="Image URL ...">
-              <span class="help-block" id="message"></span>
-            </div>
-            <input type="submit" class="btn btn-info">
-          </form>
-        </div>
-      </div>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vue 3 and Axios Demo</title>
+    <script src="https://unpkg.com/vue@3.0.0/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+
+<style>
+    .imgitem {
+        width: 100px;
+        height: 100px;
+    }
+
+    .toast {
+        visibility: hidden;
+        max-width: 50%;
+        margin: auto;
+        background-color: #333;
+        padding: 16px;
+        color: #fff;
+        text-align: center;
+        border-radius: 4px;
+        position: fixed;
+        z-index: 1;
+        left: 50%;
+        top: 30px;
+        transform: translateX(-50%);
+        font-size: 17px;
+    }
+
+    .toast.show {
+        visibility: visible;
+        -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    }
+
+    @-webkit-keyframes fadein {
+        from {top: 0; opacity: 0;}
+        to {top: 30px; opacity: 1;}
+    }
+
+    @-webkit-keyframes fadeout {
+        from {top: 30px; opacity: 1;}
+        to {top: 0; opacity: 0;}
+    }
+
+    @keyframes fadein {
+        from {top: 0; opacity: 0;}
+        to {top: 30px; opacity: 1;}
+    }
+
+    @keyframes fadeout {
+        from {top: 30px; opacity: 1;}
+        to {top: 0; opacity: 0;}
+    }
+
+</style>
+
+<div id="app">
+        <div class="toast" id="myToast">This is a toast message.</div>
+    <h1>原图</h1>
+    <div v-for="image in originImages" :key="image">
+        <img :src="'http://127.0.0.1:5000/originImages/' + image" alt="Image">
     </div>
-  </body>
+    <br />
+    <button @click="handleProcess">进行脱敏</button>
+    <h1 v-if="processedImages.length">脱敏图</h1>
+    <div v-for="image in processedImages" :key="image">
+        <img :src="'http://127.0.0.1:5000/processedImages/' + image" alt="Image">
+    </div>
+</div>
+
+<script>
+    const { ref, createApp } = Vue;
+
+    function showToast(message) {
+        var toast = document.getElementById("myToast");
+        toast.textContent = message;  // 设置toast的内容为传入的消息
+        toast.className = "toast show";
+        setTimeout(function(){ toast.className = toast.className.replace("show", ""); }, 3000);
+    }
+
+    const App = {
+        setup() {
+            const originImages = ref([]);
+            const processedImages = ref([]);
+
+            const fetchOriginImages = async () => {
+                try {
+                    const res = await axios.get('http://127.0.0.1:5000/originImages');
+                    originImages.value = res.data;  // Assuming the server returns an array of image filenames
+                } catch (error) {
+                    console.error("Error fetching image list:", error);
+                }
+            }
+
+            const fetchprocessedImages = async () => {
+                try {
+                    const res = await axios.get('http://127.0.0.1:5000/processedImages');
+                    processedImages.value = res.data;  // Assuming the server returns an array of image filenames
+                } catch (error) {
+                    console.error("Error fetching image list:", error);
+                }
+            }
+
+            fetchOriginImages();
+
+            const handleProcess = async () => {
+                const res = await axios.get('http://127.0.0.1:5000/handleProcess');
+                if (res.data.status === 'success') {
+                    showToast('处理完毕');
+                    fetchprocessedImages();
+                }
+                console.log('res!!!', res);
+            }
+
+            return {
+                originImages,
+                processedImages,
+                handleProcess,
+            };
+        },
+
+        {#template: `#}
+        {#    <div>#}
+        {#        <h1>Response from Baidu:</h1>#}
+        {#        <pre>{{ response }}</pre>#}
+        {#    </div>#}
+        {#`#}
+    }
+
+    createApp(App).mount("#app");
+</script>
+
+</body>
+
 </html>
