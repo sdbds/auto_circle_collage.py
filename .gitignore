@@ -99,3 +99,4 @@ node_modules
 venv/
 
 .idea
+test2/*

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vue 3 and Axios Demo</title>
+    <title>智能脱敏</title>
     <script src="https://unpkg.com/vue@3.0.0/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 </head>
@@ -12,10 +12,6 @@
 <body>
 
 <style>
-    .imgitem {
-        width: 100px;
-        height: 100px;
-    }
 
     .toast {
         visibility: hidden;
@@ -60,19 +56,36 @@
         to {top: 0; opacity: 0;}
     }
 
+    .imgs {
+        display: flex;
+        align-content: center;
+    }
+
+    .imgitem {
+        width: auto;
+        height: 500px;
+    }
+
+    .btn1 {
+        margin-top: 24px;
+        width: 100px;
+        height: 50px;
+    }
+
 </style>
 
 <div id="app">
-        <div class="toast" id="myToast">This is a toast message.</div>
-    <h1>原图</h1>
-    <div v-for="image in originImages" :key="image">
-        <img :src="'http://127.0.0.1:5000/originImages/' + image" alt="Image">
-    </div>
+    <button @click="handleProcess" class="btn1">进行脱敏</button>
+
     <br />
-    <button @click="handleProcess">进行脱敏</button>
+    <div class="toast" id="myToast">This is a toast message.</div>
+    <h1>原图</h1>
+    <div class="imgs">
+        <img class="imgitem" v-for="image in originImages" :key="image" :src="'http://127.0.0.1:5000/originImages/' + image" alt="Image">
+    </div>
     <h1 v-if="processedImages.length">脱敏图</h1>
-    <div v-for="image in processedImages" :key="image">
-        <img :src="'http://127.0.0.1:5000/processedImages/' + image" alt="Image">
+    <div class="imgs">
+        <img class="imgitem" v-for="image in processedImages" :key="image" :src="'http://127.0.0.1:5000/processedImages/' + image" alt="Image">
     </div>
 </div>
 
