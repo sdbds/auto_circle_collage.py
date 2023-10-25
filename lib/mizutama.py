@@ -2,13 +2,30 @@ import cv2
 import random
 import numpy as np
 from os import path
+import os
+import glob
+
+folder_path = "test"
+save_path="test2"
+IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".PNG", ".JPG", ".JPEG", ".WEBP", ".BMP"]
+
+def glob_images(directory, base="*"):
+    img_paths = []
+    for ext in IMAGE_EXTENSIONS:
+        if base == "*":
+            img_paths.extend(glob.glob(os.path.join(glob.escape(directory), base + ext)))
+        else:
+            img_paths.extend(glob.glob(glob.escape(os.path.join(directory, base + ext))))
+    img_paths = list(set(img_paths))  # 重複を排除
+    img_paths.sort()
+    return img_paths 
 
 class Mizutama:
     def __init__(self, img):
         rows, cols, _ = img.shape
         if max(rows, cols) > 1024:
             l = max(rows, cols)
-            img = cv2.resize(img, (cols * 1024 / l, rows * 1024 / l))
+            img = cv2.resize(img, (int(cols * 1024 / l), int(rows * 1024 / l)))
         self.img = img
         self.mizutama = []
 
@@ -17,17 +34,16 @@ class Mizutama:
         mzg = cv2.inRange(cv2.cvtColor(self.img, cv2.COLOR_BGR2HSV), np.array([0, 180, 8]), np.array([360, 255, 247]))
         mzg = cv2.erode(mzg, np.ones((1, 1), np.uint8))  # kernel size?
         mzg = cv2.dilate(mzg, np.ones((1, 1), np.uint8)) # kernel size?
-        _, contours, _ = cv2.findContours(mzg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+        contours, _ = cv2.findContours(mzg, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         for contour in contours:
             if contour.size > 25:
                 self.mizugi_areas.append(contour)
 
     def detect_faces(self):
-        cascades_dir = path.normpath(path.join(cv2.__file__, '..', '..', '..', '..', 'share', 'OpenCV', 'haarcascades'))
-        cascade = cv2.CascadeClassifier(path.join(cascades_dir, 'haarcascade_frontalface_alt2.xml'))
+        cascade = cv2.CascadeClassifier(path.join(cv2.__file__.replace("__init__.py", "data/haarcascade_frontalface_alt2.xml")))
         gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
         self.faces = cascade.detectMultiScale(gray)
-        print self.faces
+        print(self.faces)
 
     def create_mizutama(self):
         for x, y, w, h in self.faces:
@@ -104,11 +120,25 @@ class Mizutama:
         # mizutama mask
         mask = np.zeros((self.img.shape[0], self.img.shape[1]), np.uint8)
         for mztm in self.mizutama:
-            cv2.circle(mask, (mztm[0], mztm[1]), mztm[2], 255, -1)
+            cv2.circle(mask, (int(mztm[0]), int(mztm[1])), mztm[2], 255, -1)
         img1 = cv2.bitwise_and(self.img, self.img, mask = mask)
 
         # inpaint and blur
         blur = cv2.blur(cv2.inpaint(self.img, 255 - mask, 10, cv2.INPAINT_TELEA), (50, 50))
         img2 = cv2.bitwise_and(blur, blur, mask = 255 - mask)
 
-        return cv2.add(img1, img2)
+        return cv2.add(img1, img2)    
+
+if __name__ == '__main__':  
+# loop through all the images in the folder
+    for img_path in glob_images(folder_path,"*"):
+        # read the image
+        img = cv2.imread(img_path)
+        # create a Mizutama object
+        mztm = Mizutama(img)
+        # collage the image
+        result = mztm.collage()
+        # save the result image with a new name
+        image_name = os.path.basename(img_path)
+
+        cv2.imwrite(os.path.join(save_path,image_name), result)
