@@ -4,7 +4,8 @@ gunicorn==19.4.1
 itsdangerous==2.0
 Jinja2==3.0.3
 MarkupSafe==2.1.1
-numpy==1.21.6
+numpy==1.21.1
 Werkzeug==2.2.0
 wheel==0.24.0
 flask
+nudenet
