@@ -37,7 +37,7 @@ expose_labels = [
     "FEET_EXPOSED",
     "BELLY_COVERED",
     "FEET_COVERED",
-    "ARMPITS_COVERED",
+    #"ARMPITS_COVERED",
     "ARMPITS_EXPOSED",
     "FACE_MALE",
     "BELLY_EXPOSED",
@@ -68,10 +68,9 @@ def glob_images(directory, base="*"):
     
 def get_box_by_labels(nudection, labels):
     box = []
-    for label in labels:
-      output = [item['box'] for item in nudection if item['class'] == label]
-      if len(output) != 0:
-        box.append(output)
+    output = [item['box'] for item in nudection if item['class'] in labels]
+    if len(output) != 0:
+      box.append(output)
     return box
 
 class Mizutama:
@@ -88,10 +87,9 @@ class Mizutama:
     def detect_mizugi(self):
         self.mizugi_areas = []
         self.cover_areas = []
-        print(f"cover={self.cover}")
         if(len(self.cover)):    
         # 将列表转换为numpy数组
-            self.cover_areas = self.cover[0]
+            self.cover_areas=self.cover[0]
         else :
             mzg = cv2.inRange(cv2.cvtColor(self.img, cv2.COLOR_BGR2HSV), np.array([0, 180, 8]), np.array([360, 255, 247]))
             mzg = cv2.erode(mzg, np.ones((1, 1), np.uint8))  # kernel size?
@@ -106,27 +104,27 @@ class Mizutama:
         #gray = cv2.cvtColor(self.img, cv2.COLOR_BGR2GRAY)
         #self.faces = cascade.detectMultiScale(gray)
         self.faces = self.expose[0]
-        print(f"face:{self.faces}")
 	
     def create_mizutama(self):
         for x, y, w, h in self.faces:
-            c = self.create_circle(x + w / 2, y + h / 2, max(h / 4, w / 4))
+            c = self.create_circle(x + w / 2, y + h / 2, max(h / 2, w / 2),min(int(h),int(w)))
             if c is not None:
                 self.mizutama.append(c)
         #for verts in ([0, 0], [0, self.img.shape[0]], [self.img.shape[1], 0], [self.img.shape[1], self.img.shape[0]]):
         #    c = self.create_circle(verts[0], verts[1])
         #    if c is not None:
         #        self.mizutama.append(c)
-        for i in range(0, 8):
-            c = self.create_circle(random.randrange(self.img.shape[1]), random.randrange(self.img.shape[0]))
+        for i in range(0, 40):
+            c = self.create_circle(random.randrange(self.img.shape[1]), random.randrange(self.img.shape[0]), None, min(int(self.img.shape[0]/2),int(self.img.shape[1]/2)))
             if c is not None:
                 self.mizutama.append(c)
-
-    def create_circle(self, x, y, m = None):
+    def create_circle(self, x, y, minr = None,maxr = None):
         r = min(self.img.shape[0], self.img.shape[1])
+        if maxr is not None:
+            r = min(r, maxr)
         while self.detect_mizugi_collision(x, y, r):
             r -= 5
-            if m is not None and r < m:
+            if minr is not None and r < minr:
                 return (x, y, r)
             if r < 20:
                 return
@@ -150,8 +148,8 @@ class Mizutama:
         return False
 
     def detect_mizutama_collision(self, c1, c2):
-        # return (c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2 < (c1[2] + c2[2]) ** 2
-        return (c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2 < (c1[2] * 0.9 + c2[2] * 0.9) ** 2
+        return (c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2 < (c1[2] + c2[2]) ** 2
+        #return (c1[0] - c2[0]) ** 2 + (c1[1] - c2[1]) ** 2 < (c1[2] * 0.9 + c2[2] * 0.9) ** 2
 
     def check_rect_collision(self, rect, circle):
         rx, ry, rw, rh = rect
